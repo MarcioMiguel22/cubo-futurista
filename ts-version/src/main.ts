@@ -35,7 +35,6 @@ class FuturisticCube {
     private camera: THREE.PerspectiveCamera;
     private renderer: THREE.WebGLRenderer;
     private currentMesh: THREE.Mesh;
-    private wireframe: THREE.LineSegments;
     private stars: THREE.Points;
     private mouse: MousePosition = { x: 0, y: 0 };
     private time: number = 0;
@@ -67,9 +66,8 @@ class FuturisticCube {
 
         this.createGeometries();
 
-        const { mesh, wireframe } = this.createMesh(this.geometries[0]);
+        const { mesh } = this.createMesh(this.geometries[0]);
         this.currentMesh = mesh;
-        this.wireframe = wireframe;
 
         this.stars = this.createStars(2000);
         this.createStoryElement();
@@ -257,9 +255,8 @@ class FuturisticCube {
 
             this.scene.remove(this.currentMesh);
 
-            const { mesh, wireframe } = this.createMesh(this.geometries[this.currentGeometryIndex]);
+            const { mesh } = this.createMesh(this.geometries[this.currentGeometryIndex]);
             this.currentMesh = mesh;
-            this.wireframe = wireframe;
 
             this.currentMesh.rotation.x = currentRotation.x;
             this.currentMesh.rotation.y = currentRotation.y;
@@ -316,9 +313,8 @@ class FuturisticCube {
 
             this.scene.remove(this.currentMesh);
 
-            const { mesh, wireframe } = this.createMesh(this.geometries[this.currentGeometryIndex]);
+            const { mesh } = this.createMesh(this.geometries[this.currentGeometryIndex]);
             this.currentMesh = mesh;
-            this.wireframe = wireframe;
 
             this.currentMesh.rotation.x = currentRotation.x;
             this.currentMesh.rotation.y = currentRotation.y;
@@ -604,7 +600,7 @@ class UniverseScene {
         const intersects = this.raycaster.intersectObjects(meshes);
 
         // Esconder todos os labels
-        this.planets.forEach((planet, i) => {
+        this.planets.forEach((_planet, i) => {
             const label = document.getElementById(`label-${i}`);
             if (label) label.style.opacity = '0';
         });
