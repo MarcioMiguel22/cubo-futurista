@@ -419,17 +419,31 @@ class UniverseScene {
         this.observeVisibility();
     }
 
+    private isMobile(): boolean {
+        return window.innerWidth < 768;
+    }
+
     private calculatePositions(): void {
         // Guardar posições originais (estrela)
         for (let i = 0; i < this.planets.length; i++) {
             this.starPositions.push(this.planets[i].basePosition.clone());
         }
 
-        // Calcular posições em linha
-        const spacing = 2.5;
-        const startX = -((this.planets.length - 1) * spacing) / 2;
-        for (let i = 0; i < this.planets.length; i++) {
-            this.linePositions.push(new THREE.Vector3(startX + i * spacing, 0, 0));
+        // Calcular posições em linha (horizontal em desktop, vertical em mobile)
+        const spacing = this.isMobile() ? 1.8 : 2.5;
+
+        if (this.isMobile()) {
+            // Linha vertical em mobile
+            const startY = ((this.planets.length - 1) * spacing) / 2;
+            for (let i = 0; i < this.planets.length; i++) {
+                this.linePositions.push(new THREE.Vector3(0, startY - i * spacing, 0));
+            }
+        } else {
+            // Linha horizontal em desktop
+            const startX = -((this.planets.length - 1) * spacing) / 2;
+            for (let i = 0; i < this.planets.length; i++) {
+                this.linePositions.push(new THREE.Vector3(startX + i * spacing, 0, 0));
+            }
         }
     }
 
@@ -464,7 +478,8 @@ class UniverseScene {
             0.1,
             1000
         );
-        camera.position.z = 8;
+        // Câmara mais afastada em mobile para ver linha vertical
+        camera.position.z = this.isMobile() ? 10 : 8;
         return camera;
     }
 
@@ -509,7 +524,8 @@ class UniverseScene {
 
     // Criar 5 cubos em forma de estrela
     private createPlanets(): void {
-        const radius = 3.5;
+        // Raio menor em mobile
+        const radius = this.isMobile() ? 2.5 : 3.5;
         const angleOffset = -Math.PI / 2; // Começar do topo
 
         for (let i = 0; i < 5; i++) {
