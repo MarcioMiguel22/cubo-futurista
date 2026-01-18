@@ -397,6 +397,12 @@ class UniverseScene {
     private hoveredPlanet: PlanetCube | null = null;
     private container: HTMLElement;
 
+    // Animacao para linha
+    private isAnimating: boolean = false;
+    private animationProgress: number = 0;
+    private linePositions: THREE.Vector3[] = [];
+    private starPositions: THREE.Vector3[] = [];
+
     private planetNames = ['PROJETOS', 'SOBRE', 'SKILLS', 'CONTACTO', 'BLOG'];
 
     constructor(container: HTMLElement) {
@@ -408,9 +414,45 @@ class UniverseScene {
 
         this.stars = this.createStars(1500);
         this.createPlanets();
+        this.calculatePositions();
         this.addLights();
         this.setupEventListeners();
         this.animate();
+
+        // Observar quando a secção fica visível para iniciar animação
+        this.observeVisibility();
+    }
+
+    private calculatePositions(): void {
+        // Guardar posições originais (estrela)
+        for (let i = 0; i < this.planets.length; i++) {
+            this.starPositions.push(this.planets[i].basePosition.clone());
+        }
+
+        // Calcular posições em linha
+        const spacing = 2.5;
+        const startX = -((this.planets.length - 1) * spacing) / 2;
+        for (let i = 0; i < this.planets.length; i++) {
+            this.linePositions.push(new THREE.Vector3(startX + i * spacing, 0, 0));
+        }
+    }
+
+    private observeVisibility(): void {
+        const universeSection = document.getElementById('universe');
+        if (universeSection) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !this.isAnimating) {
+                        // Esperar 0.5 segundos depois de visível
+                        setTimeout(() => {
+                            this.isAnimating = true;
+                        }, 500);
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            observer.observe(universeSection);
+        }
     }
 
     private createScene(): THREE.Scene {
@@ -614,15 +656,52 @@ class UniverseScene {
 
         this.time += 0.008;
 
+        // Progredir animação de estrela para linha
+        if (this.isAnimating && this.animationProgress < 1) {
+            this.animationProgress += 0.006; // Velocidade suave
+            if (this.animationProgress > 1) this.animationProgress = 1;
+        }
+
         // Animar cada cubo
         this.planets.forEach((planet, i) => {
             // Rotacao individual
             planet.mesh.rotation.x += 0.005;
             planet.mesh.rotation.y += 0.008;
 
-            // Movimento suave flutuante
-            const floatOffset = Math.sin(this.time + i * 1.2) * 0.1;
-            planet.mesh.position.y = planet.basePosition.y + floatOffset;
+            // Animação de estrela para linha
+            if (this.isAnimating && this.starPositions[i] && this.linePositions[i]) {
+                const starPos = this.starPositions[i];
+                const linePos = this.linePositions[i];
+
+                // Ease out cubic - movimento natural
+                const ease = 1 - Math.pow(1 - this.animationProgress, 3);
+
+                // Interpolar posições
+                planet.mesh.position.x = starPos.x + (linePos.x - starPos.x) * ease;
+                planet.mesh.position.y = starPos.y + (linePos.y - starPos.y) * ease;
+                planet.mesh.position.z = starPos.z + (linePos.z - starPos.z) * ease;
+
+                // Ondulação durante transição
+                if (this.animationProgress < 1) {
+                    const wave = Math.sin(this.time * 3 + i * 0.8) * (1 - this.animationProgress) * 0.3;
+                    planet.mesh.position.y += wave;
+                }
+
+                // Atualizar basePosition quando terminar
+                if (this.animationProgress >= 1) {
+                    planet.basePosition.copy(linePos);
+                }
+            }
+
+            // Movimento flutuante depois de formado em linha
+            if (this.animationProgress >= 1) {
+                const floatOffset = Math.sin(this.time + i * 1.2) * 0.1;
+                planet.mesh.position.y = planet.basePosition.y + floatOffset;
+            } else if (!this.isAnimating) {
+                // Movimento flutuante antes da animação
+                const floatOffset = Math.sin(this.time + i * 1.2) * 0.1;
+                planet.mesh.position.y = planet.basePosition.y + floatOffset;
+            }
 
             // Escala quando hover
             const targetScale = this.hoveredPlanet === planet ? 1.3 : 1;
