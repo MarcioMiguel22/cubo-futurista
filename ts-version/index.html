@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cubo Futurista - Three.js + TypeScript</title>
+    <title>Márcio Miguel - Universo Digital</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
@@ -17,8 +21,20 @@
             font-family: 'Segoe UI', sans-serif;
         }
 
+        body.scroll-enabled {
+            overflow-y: auto;
+        }
+
+        /* SECÇÃO HERO (intro) */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
         #canvas-container {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
@@ -26,7 +42,7 @@
         }
 
         .overlay {
-            position: fixed;
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -44,24 +60,156 @@
             opacity: 0.8;
         }
 
-        .overlay p {
-            color: #00ffff;
-            font-size: 0.9rem;
-            letter-spacing: 0.3rem;
-            margin-top: 1rem;
+        .overlay h1::after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 1px;
+            background: #ffffff;
+            margin: 1.5rem auto 0;
+            opacity: 0.4;
+            animation: growLine 2s ease-out forwards;
+            transform-origin: center;
+        }
+
+        @keyframes growLine {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+
+        .site-name {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            opacity: 0;
+            cursor: pointer;
+            pointer-events: none;
+        }
+
+        .site-name h2 {
+            color: #ffffff;
+            font-size: 0.5rem;
+            font-weight: 100;
+            letter-spacing: 0.5rem;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: all 2s ease;
+        }
+
+        .site-name .click-hint {
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 100;
+            letter-spacing: 0.2rem;
+            opacity: 0;
+            margin-top: 2rem;
+            transition: opacity 1s ease 2s;
+        }
+
+        .site-name.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .site-name.visible h2 {
+            font-size: 2.5rem;
+            letter-spacing: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .site-name.visible .click-hint {
+            opacity: 0.5;
+        }
+
+        .site-name:hover h2 {
+            text-shadow: 0 0 30px rgba(255,255,255,0.3);
+        }
+
+        .overlay.fade-out {
+            opacity: 0 !important;
+            transition: opacity 2s ease;
+        }
+
+        /* SECÇÃO UNIVERSO */
+        .universe-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #universe-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .universe-title {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 100;
+            letter-spacing: 0.5rem;
+            text-transform: uppercase;
             opacity: 0.6;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Labels dos planetas/cubos */
+        .planet-label {
+            position: absolute;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 100;
+            letter-spacing: 0.2rem;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 20;
         }
     </style>
 </head>
 <body>
-    <div id="canvas-container"></div>
+    <!-- SECÇÃO HERO -->
+    <section class="hero-section" id="hero">
+        <div id="canvas-container"></div>
 
-    <div class="overlay">
-        <h1>Futuro</h1>
-        <p>Move o mouse para interagir</p>
-    </div>
+        <div class="overlay">
+            <h1>Márcio Miguel</h1>
+        </div>
 
-    <!-- Vite importa diretamente TypeScript -->
+        <div class="site-name" id="site-name">
+            <h2>EXPLORAR UNIVERSO</h2>
+            <p class="click-hint">clica para entrar</p>
+        </div>
+    </section>
+
+    <!-- SECÇÃO UNIVERSO -->
+    <section class="universe-section" id="universe">
+        <div id="universe-container"></div>
+        <h2 class="universe-title">Escolhe o teu destino</h2>
+    </section>
+
+    <!-- Labels para os 5 cubos -->
+    <div class="planet-label" id="label-0">PROJETOS</div>
+    <div class="planet-label" id="label-1">SOBRE</div>
+    <div class="planet-label" id="label-2">SKILLS</div>
+    <div class="planet-label" id="label-3">CONTACTO</div>
+    <div class="planet-label" id="label-4">BLOG</div>
+
     <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
