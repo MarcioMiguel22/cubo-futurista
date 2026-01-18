@@ -399,6 +399,12 @@ class UniverseScene {
     private linePositions: THREE.Vector3[] = [];
     private starPositions: THREE.Vector3[] = [];
 
+    // Animacao de foco (expansão do cubo)
+    private focusedPlanet: PlanetCube | null = null;
+    private focusProgress: number = 0;
+    private isFocusing: boolean = false;
+    private isUnfocusing: boolean = false;
+
     private planetNames = ['PROJETOS', 'SOBRE', 'SKILLS', 'CONTACTO', 'BLOG'];
 
     constructor(container: HTMLElement) {
@@ -658,9 +664,21 @@ class UniverseScene {
     }
 
     private onPlanetClick(planet: PlanetCube): void {
-        console.log(`Clicou em: ${planet.label}`);
-        // Aqui podes adicionar navegacao para diferentes paginas
-        alert(`Navegando para: ${planet.label}`);
+        // Se já há um cubo focado
+        if (this.focusedPlanet) {
+            // Clicar no cubo focado = voltar atrás
+            if (this.focusedPlanet === planet) {
+                this.isUnfocusing = true;
+                this.isFocusing = false;
+            }
+            return;
+        }
+
+        // Focar no cubo clicado
+        this.focusedPlanet = planet;
+        this.isFocusing = true;
+        this.isUnfocusing = false;
+        this.focusProgress = 0;
     }
 
     private animate = (): void => {
@@ -672,6 +690,20 @@ class UniverseScene {
         if (this.isAnimating && this.animationProgress < 1) {
             this.animationProgress += 0.006; // Velocidade suave
             if (this.animationProgress > 1) this.animationProgress = 1;
+        }
+
+        // Progredir animação de foco
+        if (this.isFocusing && this.focusProgress < 1) {
+            this.focusProgress += 0.04;
+            if (this.focusProgress > 1) this.focusProgress = 1;
+        }
+        if (this.isUnfocusing && this.focusProgress > 0) {
+            this.focusProgress -= 0.04;
+            if (this.focusProgress <= 0) {
+                this.focusProgress = 0;
+                this.isUnfocusing = false;
+                this.focusedPlanet = null;
+            }
         }
 
         // Animar cada cubo
@@ -715,9 +747,40 @@ class UniverseScene {
                 planet.mesh.position.y = planet.basePosition.y + floatOffset;
             }
 
-            // Escala quando hover
-            const targetScale = this.hoveredPlanet === planet ? 1.3 : 1;
-            planet.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+            // Animação de foco
+            if (this.focusedPlanet && this.focusProgress > 0) {
+                const ease = 1 - Math.pow(1 - this.focusProgress, 3);
+
+                if (this.focusedPlanet === planet) {
+                    // Cubo focado: aproxima e expande
+                    const targetZ = 4; // Aproximar da câmara
+                    const targetScale = 2.5; // Expandir
+
+                    planet.mesh.position.z = planet.basePosition.z + targetZ * ease;
+                    const scale = 1 + (targetScale - 1) * ease;
+                    planet.mesh.scale.set(scale, scale, scale);
+                } else {
+                    // Outros cubos: afastar e diminuir opacidade
+                    const targetZ = -3;
+                    planet.mesh.position.z = planet.basePosition.z + targetZ * ease;
+
+                    // Reduzir opacidade
+                    const material = planet.mesh.material as THREE.MeshStandardMaterial;
+                    material.opacity = 0.9 - 0.6 * ease;
+
+                    const scale = 1 - 0.3 * ease;
+                    planet.mesh.scale.set(scale, scale, scale);
+                }
+            } else {
+                // Escala quando hover (só se não estiver em modo foco)
+                const targetScale = this.hoveredPlanet === planet ? 1.3 : 1;
+                planet.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+
+                // Reset z e opacidade
+                planet.mesh.position.z = planet.basePosition.z;
+                const material = planet.mesh.material as THREE.MeshStandardMaterial;
+                material.opacity = 0.9;
+            }
         });
 
         // Estrelas rodam
