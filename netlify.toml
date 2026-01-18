@@ -1,7 +1,7 @@
 [build]
   base = "ts-version"
   command = "npm run build"
-  publish = "ts-version/dist"
+  publish = "dist"
 
 [[redirects]]
   from = "/*"
